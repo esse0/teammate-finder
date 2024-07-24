@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id String @default(uuid()) @id
+  login String @unique
+  email String @unique
+  password String
+  bio String?
+  first_name String?
+  last_name String?
+  patronymic String?
+  steamId String? @unique
+  role Role @default(USER)
+  status Status @default(OFFLINE)
+  games GamesOnUsers[]
+  massages Messages[]
+  chatrooms Chatroom[]
+  followedBy User[]  @relation("UserFollows")
+  following  User[]  @relation("UserFollows")
+  hashedRefreshToken String?
+  posts Posts[]
+  likedPosts LikedPostsOnUsers[]
+}
+
+model Messages {
+  id Int @default(autoincrement()) @id
+  chatroom Chatroom @relation(fields: [chatroom_id], references: [id])
+  chatroom_id Int
+  sender User @relation(fields: [sender_id], references: [id])
+  sender_id String
+  body String
+  created_at DateTime @default(now())
+}
+
+model Chatroom{
+  id Int @default(autoincrement()) @id
+  flogin String
+  slogin String
+  messages Messages[]
+  chatroom_users User[]
+}
+
+model Games {
+  id Int @default(autoincrement()) @id
+  name String
+  users GamesOnUsers[]
+}
+
+model GamesOnUsers {
+  user User @relation(fields: [userId], references: [id])
+  userId String
+  game Games @relation(fields: [gameId], references: [id])
+  gameId Int
+  @@id([userId,gameId])
+}
+
+model Posts {
+  id Int @default(autoincrement()) @id
+  image String?
+  description String?
+  date DateTime @default(now())
+  user User @relation(fields: [userId], references: [id])
+  userId String
+  usersLikes LikedPostsOnUsers[]
+}
+
+model LikedPostsOnUsers{
+  user User @relation(fields: [userLogin], references: [login])
+  userLogin String
+  Post Posts @relation(fields: [postId], references: [id])
+  postId Int
+  @@id([userLogin, postId])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Status {
+  ONLINE
+  OFFLINE
+}
